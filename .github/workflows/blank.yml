@@ -1,0 +1,42 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd electron-app
+        npm install
+        
+    - name: Build Electron app
+      run: |
+        cd electron-app
+        npm install -D electron-packager
+        npx electron-packager . ChineseChess --platform=win32 --arch=x64 --out=dist --overwrite
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ChineseChess
+        path: electron-app/dist/
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: electron-app/dist/**/*.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
